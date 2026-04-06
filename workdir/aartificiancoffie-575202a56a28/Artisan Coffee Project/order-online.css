@@ -1,0 +1,222 @@
+*{
+    margin: 0%;
+    padding: 0%;
+    box-sizing: border-box;
+}
+body{
+    background-color: #000;
+    position: relative;
+}
+a{
+    position: absolute;
+    z-index: 999;
+    left: 15px;
+    top: 20px;
+}
+.ri-home-5-fill{
+    font-size: 35px;
+    color: #ca8a70;
+}
+a{
+    position: absolute;
+    z-index: 999;
+    left: 15px;
+    top: 20px;
+}
+.ri-home-5-fill:hover{
+    font-size: 35px;
+    color: #FFF;
+}
+
+.order-online-div{
+    height: 750px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.box-no1{
+    height: 220px;
+    width: 100%;
+    display: flex;
+    padding-left: 60px;
+    margin-top: 17px;
+    gap: 40px;
+}
+.american-coffee{
+    height: 100%;
+    width: 22%;
+     background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#american-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;
+}
+#h3{
+ padding-left: 90px;
+}
+#h3:hover{
+    color: #fff;
+   }
+#buttn{
+    height: 23px;
+    width: 20%;
+    margin-left: 70%;
+    margin-bottom: 10px;
+    border-radius: 30px;
+    font-size: 10px;
+    outline: none;
+    border: none;
+    background-color: black;
+    color: #fff; 
+}
+#buttn:hover{
+    height: 25px;
+    width: 25%;
+    background-color:#fff;
+    color: #000;  
+}
+.espresson-coffee{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#espresson-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;
+}
+.White-coffee{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#White-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;
+}
+.latte-coffee{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#latte-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;
+}
+
+.box-no2{
+    height: 220px;
+    width: 100%;
+    display: flex;
+    padding-left: 60px;
+    gap: 40px;
+}
+.cppucci-coffee{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#cppucci-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 15px;
+}
+.mocha-coffee{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#mocha-coffee-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px; 
+}
+.chocolate-milke{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#chocolate-milke-img{
+    height: 80%;
+    display: flex;
+    padding-left: 20px;
+}
+.latter-cocoa{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;}
+#latter-cocoa-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px; 
+}
+.box-no3{
+    height: 220px;
+    width: 100%;
+    display: flex;
+    padding-left: 60px;
+    gap: 40px;
+}
+.fragrant-chocolate{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;}
+#fragrant-chocolate-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;    
+}
+.ceylon-black-tea{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;}
+#ceylon-black-tea-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px;  
+}
+.milk-tea{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;}
+#milk-tea-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px; 
+}
+.lemon-red-tea{
+    height: 100%;
+    width: 22%;
+    background-color: #fff; 
+    border-radius: 15px 15px 15px 15px ;
+}
+#lemon-red-tea-img{
+    height: 80%;
+    display: flex;
+    padding-left: 60px; 
+}
+#img-info:hover{
+     background-color: grey; 
+     border: 2px solid grey; 
+}
+#img-info{
+    height: 20%;
+    width: 100%;
+    background-color: #ca8a70;
+    border-radius: 0px 0px 15px 15px;
+}

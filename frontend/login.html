@@ -162,8 +162,8 @@
                 const response = await res.json();
                 
                 if (res.ok) {
-                    localStorage.setItem('token', response.data.token);
-                    localStorage.setItem('user', JSON.stringify(response.data.user));
+                    localStorage.setItem('devdeploy_token', response.data.token);
+                    localStorage.setItem('devdeploy_user', JSON.stringify(response.data.user));
                     window.location.href = '/dashboard';
                 } else {
                     status.innerText = response.message || 'ACCESS DENIED';
@@ -181,7 +181,7 @@
         };
 
         // Redirect if already logged in
-        if (localStorage.getItem('token')) {
+        if (localStorage.getItem('devdeploy_token')) {
             window.location.href = '/dashboard';
         }
     </script>

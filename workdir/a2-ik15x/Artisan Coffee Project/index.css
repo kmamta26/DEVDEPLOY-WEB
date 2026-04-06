@@ -1,0 +1,432 @@
+*{
+    padding: 0%;
+    margin: 0%;
+    box-sizing: border-box;
+    font-family: Roboto, HelveticaNeue, Arial, sans-serif;
+    /* font-size: small; */
+
+
+}
+.navBar{
+    height: 60px;
+    width: 100%;
+    background-color: #1c0300e7;
+    display: flex;
+}
+.brewHaven-logo{
+    height: 100%;
+    width: 20%;
+}
+#brew-have-img{
+    height: 100px;
+    padding-bottom: 50px;
+    padding-left: 50px;
+}
+.menuList{
+    height: 100%;
+    width: 60%;
+}
+.ul-list{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    font-size: 14 px;
+    padding-top: 19px;
+    color:  #e9aa91;
+}
+.ProductsMenu{
+    text-decoration: none;
+}
+
+.buttons-div{
+    height: 100%;
+    width: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+}
+#sign-In-bttn{
+    height: 38px;
+    width: 90px;
+    outline: none;
+    border: 2px solid #47271E;
+    box-shadow: 1px 1px 6px 1px #e9aa91;
+    border-radius: 30px;
+    font-size: 12px;
+    color: #47271E;
+    text-decoration: none;
+}
+#order-online-bttn{
+    height: 36px;
+    width: 90px;
+    outline: none;
+    border-radius: 30px;
+    font-size: 12px;
+    background-color: #8F6453;
+    border: 2px solid #47271E;
+    box-shadow: 1px 1px 6px 1px #fab29c;
+    color: #f4e5e1;
+}
+#order-online-a{
+    color: #fff;
+}
+.home-Port{
+    height: 670px;
+    width: 100%;
+    background-color: #000;
+    display: flex;
+    border-bottom: 2px solid #7e5950;
+}
+.artisan-Coffee-info{
+    height: 100%;
+    width: 65%;
+}
+a{
+    text-decoration: none;
+    color: #e9aa91 ;
+}
+#ethically-h4{
+    margin-left: 80px;
+    margin-top: 30px;
+    color: #fab29c;
+}
+#heding1{
+    margin-left: 80px;
+    padding-top: 15%; 
+    font-size: 70px; 
+    color: #fff;
+}
+#heding2{
+    margin-left: 80px;
+    font-size: 70px; 
+    color: #e8e464;
+}
+#first-passage{
+    margin-left: 80px;
+    font-size: 18px;
+    color: #f4e5e1;  
+}
+.artisan-Coffee-cup-img{
+    height: 100%;
+    width: 35%;
+}
+#Coffee-cup-img{
+    height: 100%;
+}
+.buttons-cafe-blends{
+    height: 70px;
+   width: 60%;
+   margin-top: 70px;
+   display: flex;
+   padding-left: 60px;
+   gap: 50px;
+
+}
+#explore-our-blends-buttn{
+    height: 40px;
+    width: 160px;
+    border-radius: 30px;
+    background-color: #8F6453;
+    border: 2px solid #47271E;
+    box-shadow: 1px 1px 6px 1px #fab29c;
+    color: #f4e5e1;
+    outline: none;
+    font-size: 15px;
+    margin-left: 150px;
+}
+#visit-our-cafe-buttn{
+height: 40px;
+    width: 130px;
+    background-color: transparent;
+    outline: none;
+    border: 2px solid #47271E;
+    box-shadow: 1px 1px 6px 1px #e9aa91;
+    border-radius: 30px;
+    font-size: 16px;
+    color: #c38979;
+}
+#p{
+    color: #fff;
+}
+
+               /* our-Sectio */
+
+.our-Section{
+    height: 1000px;
+    width: 100%;
+    background-color:#242626;
+    border-bottom: 2px solid #7e5950;   
+}
+.our-Section-text{
+    height: 300px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#Signature-Coffee-Blends{
+    font-size: 40px;
+    color:  #e9aa91;
+}
+#line-our-section{
+   color: #7e5950; 
+}
+#our-section-h5{
+    color: #7e5950;
+    font-size: 14px;  
+}
+.img-coffee{
+    height: 500px;
+    width: 100%;
+    display: flex;
+    gap: 37px;
+}
+
+.ethiopian-yirgacheffe-img{
+    height: 500px;
+    width: 30%;
+    margin-left: 40px;
+    background-image: url("./assets/ethiopian-yirgacheffe-img.jpg");
+    background-size: cover;
+    background-position: center;
+}
+.colombian-supremo-img{
+    height:500px ;
+    width: 30%;
+    background-image: url("./assets/colombian-supremo-img.jpg");
+    background-size: cover;
+    background-position: center;
+}
+.dark-roast-espresso-img{
+    height: 500px;
+    width: 30%;
+    background-image: url("./assets/dark-roast-espresso-img.jpg");
+    background-size: cover;
+    background-position: center;
+}
+.img-coffee-info{
+    height: 200px;
+    width: 100%;
+    display: flex;
+    gap: 37px;
+}
+.ethiopian-yirgacheffe-img-info{
+    height:90% ;
+    width: 30%;
+    margin-left: 40px;
+    padding-left: 30px;
+    padding-top: 30px;
+    color: #fff;
+    background-color: #47271E;
+}
+#abc1{
+    color: rgb(232, 200, 18);
+}
+.colombian-supremo-img-info{
+    height:90% ;
+    width: 30%;
+    padding-left: 30px;
+    padding-top: 30px;
+    color: #fff;
+    background-color: #47271E;
+}
+#abc2{
+    color: rgb(232, 200, 18);
+}
+.dark-roast-espresso-img-info{
+    height:90% ;
+    width: 30%;
+    padding-left: 30px;
+    padding-top: 30px;
+    color: #fff;
+    background-color: #47271E;
+}
+#abc3{
+    color: rgb(232, 200, 18);
+}
+
+
+                   /* end-section */
+.end-Section{
+    height: 300px;
+    width: 100%;
+    background-color: #65382c;
+    display: flex;
+    gap: 40px;
+
+}
+.about-BrewHaven{
+    height: 100%;
+    width: 30%;
+    /* background-color: lightskyblue; */
+    padding-left: 40px;
+    padding-top: 30px;
+    margin-left: 40px;
+}
+#name1{
+    color: #fff;
+}
+#p1{
+    color: goldenrod;
+}
+#text-line1{
+    color: #e9aa91;
+}
+.icons{
+ height: 60px;
+ width: 100%;
+ padding-left: 30px;
+ padding-top: 40px;
+ gap: 10px;
+ display: flex;
+}
+#facebook-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+#facebook-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    outline: none;
+    background-color:#1877f2 ;
+    box-shadow: 1px 1px 5px 5px #516279;
+}
+.ri-facebook-circle-fill{
+    color: #1877f2;
+    font-size: 25px;
+}
+.ri-facebook-circle-fill:hover{
+    color: #000;
+    
+}
+#whatsapp-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none;   
+}
+#whatsapp-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    box-shadow: 1px 1px 5px 5px #8bc4a0;
+        outline: none;
+    background-color: #25d366;
+}
+.ri-whatsapp-line{
+   color:  #25d366;
+   font-size: 25px;
+}
+.ri-whatsapp-line:hover{
+    color: #000;
+}
+#instagram-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none; 
+}
+#instagram-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    box-shadow: 1px 1px 5px 5px #9e4a4a ;
+        outline: none;
+    background-color: #fd1d1d ; 
+}
+.ri-instagram-line{
+    color: #fd1d1d;
+    font-size: 25px;
+}
+.ri-instagram-line:hover{
+    color: #000;
+}
+#twitter-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+#twitter-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    box-shadow: 1px 1px 5px 5px #5a7ca9 ;
+        outline: none;
+    background-color:  #114992 ; 
+}
+.ri-twitter-fill{
+    color: #114992;
+    font-size: 25px;
+}
+.ri-twitter-fill:hover{
+    color: #000;
+}
+#tiktok-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+#tiktok-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    box-shadow: 1px 1px 5px 5px #95d5da ;
+        outline: none;
+    background-color:  #4de8f4; 
+}
+.ri-tiktok-fill{
+   color:  #4de8f4;
+   font-size: 25px;
+}
+.ri-tiktok-fill:hover{
+    color: #000;
+}
+#snapchat-bttn{
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+#snapchat-bttn:hover{
+    height: 38px;
+    width: 38px;
+    border-radius: 30px;
+    box-shadow: 1px 1px 5px 5px #b5b472 ;
+        outline: none;
+    background-color:  #fffc00; 
+}
+.ri-snapchat-line{
+   color:   #fffc00;
+   font-size: 25px;
+}
+.ri-snapchat-line:hover{
+    color: #000;
+}
+
+.Quick-Links{
+    height: 100%;
+    width: 30%;
+    /* background-color: lightpink; */
+    padding-left: 40px;
+    padding-top: 30px;
+    color: #c38979;
+}
+#Quick-Links-h3{
+    color: #fff;
+}
+.Quick-Links ul{
+    display: flex;
+    flex-direction: column;
+    gap:15px;
+}
+.content-end-div{
+    height: 100%;
+    width: 30%;
+    /* background-color: lightgreen; */
+    padding-left: 40px;
+    padding-top: 30px;
+    color: #fff;
+}
+

@@ -1,18 +1,26 @@
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const admzip = require('adm-zip');
+const { spawn } = require('child_process');
 const response = require('../utils/response');
 const Deployment = require('../models/Deployment');
-const deployService = require('../services/deployService');
 
 const WORK_DIR = path.resolve(__dirname, '../../workdir');
 const DB_PATH = path.join(__dirname, '../db.json');
 
-const getLocalDb = () => {
-    try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf8')); } catch { return []; }
+const _readDb = () => {
+    try {
+        const raw = fs.readFileSync(DB_PATH, 'utf8');
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : { users: [], deployments: [] };
+    } catch {
+        return { users: [], deployments: [] };
+    }
 };
-const setLocalDb = (data) => fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+
+const _writeDb = (data) => {
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+};
 
 const DeployController = {
     async uploadProject(req, res) {
@@ -20,119 +28,135 @@ const DeployController = {
             if (!req.file) return response.error(res, 'No project node payload detected.', 400);
 
             const stamp = Date.now();
-            const id = 'dep-' + stamp;
+            const id = 'proj-' + stamp;
             const dest = path.join(WORK_DIR, id);
             if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
 
             const zip = new admzip(req.file.path);
             zip.extractAllTo(dest, true);
 
-            const d = {
-                id, _id: id,
-                userId: req.user.id || 'anonymous',
-                projectName: req.body.projectName || req.file.originalname,
-                folderPath: dest,
-                url: `/${id}`,
+            // Entry point validation - Detect project type
+            let contents = fs.readdirSync(dest);
+            let projectRoot = dest;
+            
+            // Handle if ZIP has a root folder
+            if (contents.length === 1 && fs.statSync(path.join(dest, contents[0])).isDirectory()) {
+                projectRoot = path.join(dest, contents[0]);
+                contents = fs.readdirSync(projectRoot);
+            }
+
+            const hasPackageJson = contents.includes('package.json');
+            const hasIndexHtml = contents.includes('index.html');
+
+            const deployment = {
+                id,
+                userId: (req.user && req.user.id) || 'anonymous',
+                projectName: req.body.projectName || req.file.originalname.replace('.zip', ''),
+                folderPath: projectRoot,
+                type: hasPackageJson ? 'node' : 'static',
                 status: 'building',
-                logs: [
-                    `[${new Date().toISOString()}] INITIALIZING HANDSHAKE...`,
-                    `[${new Date().toISOString()}] NODE CLUSTER: ${id} ACCEPTED.`,
-                    `[${new Date().toISOString()}] EXTRACTING PAYLOAD... 100% SUCCESS.`
-                ],
+                url: `http://localhost:5000/proj-${id}`,
+                logs: [`[${new Date().toISOString()}] Extraction complete. Detected type: ${hasPackageJson ? 'Node/React' : 'Static'}`],
                 createdAt: new Date()
             };
 
-            const local = getLocalDb();
-            local.push(d);
-            setLocalDb(local);
+            const db = _readDb();
+            db.deployments = db.deployments || [];
+            db.deployments.push(deployment);
+            _writeDb(db);
 
-            // Async Build Handshake
-            setTimeout(async () => {
-                try {
-                    d.logs.push(`[${new Date().toISOString()}] DISCOVERING INDEX PROTOCOL...`);
-                    d.status = 'active';
-                    d.logs.push(`[${new Date().toISOString()}] MISSION SUCCESS. NODE LIVE @ http://localhost:5000/${id}`);
-                    setLocalDb(local);
-                    await Deployment.create(d).catch(() => {});
-                } catch(e) {}
-            }, 1000);
+            // Initiation of Build Process
+            this._buildProject(deployment, db);
 
-            return response.success(res, d, 'CLUSTER INITIALIZED. BUILDING LINE-BY-LINE...');
+            return response.success(res, deployment, 'Project uploaded. Starting deployment sequence...');
         } catch (err) { return response.error(res, err.message); }
     },
 
-    async deployGitHub(req, res) {
+    async _buildProject(deployment, db) {
+        const root = deployment.folderPath;
+        const entryId = deployment.id;
+
+        if (deployment.type === 'static') {
+            deployment.status = 'active';
+            deployment.logs.push(`[${new Date().toISOString()}] Static deployment successful.`);
+            _writeDb(db);
+            return;
+        }
+
+        // Node/React Build Pipeline
         try {
-            const { repoUrl, branch, projectName } = req.body;
-            const stamp = Date.now();
-            const id = 'dep-' + stamp;
-            const dest = path.join(WORK_DIR, id);
+            deployment.logs.push(`[${new Date().toISOString()}] Running npm install...`);
+            _writeDb(db);
 
-            const d = {
-                id, _id: id,
-                userId: req.user.id,
-                projectName: projectName || repoUrl.split('/').pop(),
-                folderPath: dest,
-                url: `/${id}`,
-                type: 'github',
-                status: 'building',
-                logs: [
-                    `[${new Date().toISOString()}] SATELLITE LINK ESTABLISHED.`,
-                    `[${new Date().toISOString()}] CLONING TARGET CLUSTER: ${repoUrl}...`,
-                    `[${new Date().toISOString()}] BRANCH: ${branch || 'main'}`
-                ],
-                createdAt: new Date()
-            };
+            await this._runCmd('npm', ['install'], root, deployment, db);
+            
+            deployment.logs.push(`[${new Date().toISOString()}] Running npm run build...`);
+            _writeDb(db);
+            
+            await this._runCmd('npm', ['run', 'build'], root, deployment, db);
 
-            const local = getLocalDb();
-            local.push(d);
-            setLocalDb(local);
+            // Detection of build artifact
+            const buildFolder = fs.readdirSync(root).find(f => ['dist', 'build', 'out'].includes(f));
+            if (buildFolder) {
+                deployment.folderPath = path.join(root, buildFolder);
+                deployment.logs.push(`[${new Date().toISOString()}] Build artifact found: ${buildFolder}`);
+            }
 
-            // Background Clone Sequence
-            setTimeout(async () => {
-                try {
-                    await deployService.cloneRepo(repoUrl, dest, branch || 'main');
-                    d.logs.push(`[${new Date().toISOString()}] CLONE SUCCESS. DISCOVERING PROJECT ENGINE...`);
-                    d.status = 'active';
-                    d.logs.push(`[${new Date().toISOString()}] MISSION COMPLETE. NODE LIVE @ http://localhost:5000/${id}`);
-                    setLocalDb(local);
-                    await Deployment.create(d).catch(() => {});
-                } catch (e) {
-                    d.status = 'failed';
-                    d.logs.push(`[${new Date().toISOString()}] CLONE FAILED: ${e.message}`);
-                    setLocalDb(local);
-                }
-            }, 100);
+            deployment.status = 'active';
+            deployment.logs.push(`[${new Date().toISOString()}] Deployment LIVE @ ${deployment.url}`);
+            _writeDb(db);
+        } catch (err) {
+            deployment.status = 'failed';
+            deployment.logs.push(`[${new Date().toISOString()}] Build failed: ${err}`);
+            _writeDb(db);
+        }
+    },
 
-            return response.success(res, d, 'SYNC SEQUENCE INITIATED.');
-        } catch (err) { return response.error(res, err.message); }
+    _runCmd(cmd, args, cwd, deployment, db) {
+        return new Promise((resolve, reject) => {
+            const proc = spawn(cmd, args, { cwd, shell: true });
+            
+            proc.stdout.on('data', (data) => {
+                deployment.logs.push(data.toString().trim());
+                _writeDb(db);
+            });
+
+            proc.stderr.on('data', (data) => {
+                deployment.logs.push(`[WARN] ${data.toString().trim()}`);
+                _writeDb(db);
+            });
+
+            proc.on('close', (code) => {
+                if (code === 0) resolve();
+                else reject(`Command failed with code ${code}`);
+            });
+        });
     },
 
     async listDeployments(req, res) {
-        const local = getLocalDb().filter(d => d.userId === req.user.id || req.user.id === 'anonymous');
-        return response.success(res, { count: local.length, deployments: local });
+        const db = _readDb();
+        const userId = req.user && req.user.id;
+        const list = (db.deployments || []).filter(d => d.userId === userId || userId === 'anonymous');
+        return res.json(list);
     },
 
     async deleteDeployment(req, res) {
         try {
             const id = req.params.id;
-            const local = getLocalDb();
-            const idx = local.findIndex(d => d.id === id || d._id === id);
+            const db = _readDb();
+            const idx = db.deployments.findIndex(d => d.id === id);
             
-            if (idx === -1) return response.error(res, 'Target Node Not Found', 404);
-            const dep = local[idx];
+            if (idx === -1) return response.error(res, 'Deployment not found.', 404);
+            const dep = db.deployments[idx];
 
-            // 1. Physical Cleanup
-            try { 
-                if (fs.existsSync(dep.folderPath)) fs.rmSync(dep.folderPath, { recursive: true, force: true }); 
-            } catch(e) {}
+            if (fs.existsSync(dep.folderPath)) {
+                fs.rmSync(dep.folderPath, { recursive: true, force: true });
+            }
 
-            // 2. State Cleanup
-            local.splice(idx, 1);
-            setLocalDb(local);
-            await Deployment.deleteOne({ $or: [{ id: id }, { _id: id }] }).catch(() => {});
-
-            return response.success(res, null, 'NODE TERMINATED AND CLEANED.');
+            db.deployments.splice(idx, 1);
+            _writeDb(db);
+            
+            return response.success(res, null, 'Project deleted.');
         } catch (err) { return response.error(res, err.message); }
     }
 };

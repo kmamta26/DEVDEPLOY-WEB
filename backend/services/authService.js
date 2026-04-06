@@ -15,15 +15,16 @@ class AuthService {
 
     _ensureDb() {
         if (!fs.existsSync(DB_PATH)) {
-            fs.writeFileSync(DB_PATH, JSON.stringify({ users: [], projects: [] }, null, 2));
+            fs.writeFileSync(DB_PATH, JSON.stringify({ users: [], deployments: [] }, null, 2));
         }
     }
 
     _readDb() {
         try {
-            return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+            return { users: data.users || [], deployments: data.deployments || data.projects || [] };
         } catch (e) {
-            return { users: [], projects: [] };
+            return { users: [], deployments: [] };
         }
     }
 
@@ -38,8 +39,11 @@ class AuthService {
         }
 
         try {
-            // 1. Try Live MongoDB
-            let user = await User.findOne({ email });
+            // 1. Try Live MongoDB (Only if fully online)
+            let user = null;
+            if (require('mongoose').connection.readyState === 1) {
+                user = await User.findOne({ email });
+            }
             if (user) return user;
 
             // 2. Try Persistence Fallback (db.json)
@@ -78,8 +82,10 @@ class AuthService {
 
     async getUserById(id) {
         try {
-            const user = await User.findById(id);
-            if (user) return user;
+            if (require('mongoose').connection.readyState === 1) {
+                const user = await User.findById(id);
+                if (user) return user;
+            }
         } catch (e) {}
 
         const db = this._readDb();

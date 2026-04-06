@@ -1,5 +1,9 @@
 node_modules/
 .env
-*.zip
-workdir/
-uploads/
+dist/
+build/
+backend/sites/
+backend/logs/
+backend/uploads/
+.DS_Store
+*.log

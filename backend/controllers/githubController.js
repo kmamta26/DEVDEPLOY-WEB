@@ -1,113 +1,85 @@
-const User          = require('../models/User');
-const { encrypt }   = require('../utils/crypto');
-const githubService = require('../services/githubService');
-const response      = require('../utils/response');
+const axios = require('axios');
+const simpleGit = require('simple-git');
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const { runDeploymentPipeline } = require('./projectController');
 
-/**
- * POST /api/github/connect
- * Validate a GitHub PAT, store it encrypted, save the GitHub username.
- * Body: { token }
- */
-async function connectGithub(req, res) {
-  try {
+const SITES_DIR = path.join(__dirname, '../../sites');
+
+exports.fetchRepos = async (req, res) => {
     const { token } = req.body;
-    if (!token || typeof token !== 'string' || token.trim() === '') {
-      return response.badRequest(res, 'GitHub Personal Access Token is required');
-    }
+    if (!token) return res.status(400).json({ error: 'GitHub Personal Access Token is required.' });
 
-    // 1. Validate with GitHub API before storing anything
-    let ghUser;
     try {
-      ghUser = await githubService.validateToken(token.trim());
+        console.log('📡 Fetching GitHub repositories...');
+        const response = await axios.get('https://api.github.com/user/repos', {
+            headers: { Authorization: `token ${token}` },
+            params: { sort: 'updated', per_page: 50 }
+        });
+        
+        const repos = response.data.map(repo => ({
+            id: repo.id,
+            name: repo.name,
+            full_name: repo.full_name,
+            url: repo.clone_url,
+            private: repo.private,
+            description: repo.description
+        }));
+
+        res.status(200).json({ repos });
     } catch (err) {
-      return response.badRequest(res, err.message);
+        console.error('❌ GitHub Repo Fetch Failed:', err.message);
+        res.status(500).json({ error: 'Failed to fetch repositories. Check your token permissions.' });
     }
+};
 
-    // 2. Encrypt and save to user document
-    const encryptedToken = encrypt(token.trim());
-    await User.findByIdAndUpdate(req.user.id, {
-      'github.token':       encryptedToken,
-      'github.username':    ghUser.login,
-      'github.connectedAt': new Date()
-    });
+exports.deployFromGithub = async (req, res) => {
+    const { githubUrl, branch, token } = req.body;
+    const githubUrlClean = (githubUrl || '').trim();
+    const tokenClean = (token || '').trim();
+    const branchClean = (branch || 'main').trim();
 
-    return response.success(res, {
-      githubUsername: ghUser.login,
-      name:           ghUser.name,
-      avatarUrl:      ghUser.avatar_url,
-      publicRepos:    ghUser.public_repos,
-      profileUrl:     ghUser.html_url,
-      connectedAt:    new Date()
-    }, `GitHub account @${ghUser.login} connected successfully`);
-  } catch (err) {
-    return response.error(res, 'Failed to connect GitHub', 500, err.message);
-  }
-}
+    const newId = uuidv4();
+    const projectPath = path.join(SITES_DIR, newId);
 
-/**
- * GET /api/github/repos
- * Fetch the authenticated user's repositories from GitHub.
- * Query: ?sort=updated&visibility=all&perPage=50
- */
-async function getRepos(req, res) {
-  try {
-    // Load user with the encrypted token
-    const user = await User.findById(req.user.id).select('+github.token');
-    if (!user || !user.github?.token) {
-      return response.badRequest(res, 'GitHub is not connected. Please connect GitHub first via POST /api/github/connect');
+    if (!githubUrlClean) return res.status(400).json({ error: 'GitHub repository URL is required.' });
+
+    try {
+        console.log(`🚀 Git Clone Initiated: ${githubUrlClean} (Branch: ${branchClean})`);
+        
+        // Comprehensive cleanup before cloning to avoid "Folder already exists" errors
+        if (fs.existsSync(projectPath)) {
+            console.log(`🧹 Clearing stale directory: ${projectPath}`);
+            fs.rmSync(projectPath, { recursive: true, force: true });
+        }
+
+        // Ensure parent sites directory exists
+        if (!fs.existsSync(SITES_DIR)) fs.mkdirSync(SITES_DIR, { recursive: true });
+
+        const git = simpleGit();
+        
+        // CLONE OPERATION
+        await git.clone(githubUrlClean, projectPath, ['--depth', '1', '-b', branchClean]);
+
+        console.log(`✅ ${newId} clone complete. Building infrastructure...`);
+        
+        // Trigger the REAL deployment pipeline (npm install / build)
+        const { runDeploymentPipeline } = require('./projectController');
+        runDeploymentPipeline(newId, projectPath);
+
+        res.status(201).json({ 
+            message: 'Repository successfully linked. Building project...', 
+            projectId: newId,
+            url: `http://localhost:5000/sites/${newId}`
+        });
+
+    } catch (err) {
+        console.error('❌ GitHub Deployment Failed:', err);
+        // Clean up the partial directory if clone failed
+        if (fs.existsSync(projectPath)) fs.rmSync(projectPath, { recursive: true, force: true });
+        
+        const cleanMsg = err.message.includes('not found') ? 'Repository not found or private.' : err.message;
+        res.status(500).json({ error: `Deployment Failed: ${cleanMsg}` });
     }
-
-    const { sort = 'updated', visibility = 'all', perPage = 50 } = req.query;
-
-    const repos = await githubService.fetchUserRepos(user.github.token, {
-      sort,
-      visibility,
-      perPage: Math.min(Number(perPage) || 50, 100)
-    });
-
-    return response.success(res, { count: repos.length, repos }, 'Repositories fetched successfully');
-  } catch (err) {
-    // Surface GitHub API errors nicely
-    if (err.response?.status === 401) {
-      return response.unauthorized(res, 'GitHub token has expired or been revoked. Please reconnect.');
-    }
-    return response.error(res, 'Failed to fetch repositories', 500, err.message);
-  }
-}
-
-/**
- * GET /api/github/repos/:owner/:repo/branches
- * Fetch available branches for a specific repository.
- */
-async function getRepoBranches(req, res) {
-  try {
-    const user = await User.findById(req.user.id).select('+github.token');
-    if (!user?.github?.token) {
-      return response.badRequest(res, 'GitHub is not connected');
-    }
-
-    const fullName = `${req.params.owner}/${req.params.repo}`;
-    const branches = await githubService.fetchRepoBranches(user.github.token, fullName);
-
-    return response.success(res, { fullName, branches });
-  } catch (err) {
-    return response.error(res, 'Failed to fetch branches', 500, err.message);
-  }
-}
-
-/**
- * DELETE /api/github/disconnect
- * Remove stored GitHub credentials.
- */
-async function disconnectGithub(req, res) {
-  try {
-    await User.findByIdAndUpdate(req.user.id, {
-      $unset: { github: '' }
-    });
-    return response.success(res, null, 'GitHub account disconnected');
-  } catch (err) {
-    return response.error(res, 'Failed to disconnect GitHub', 500, err.message);
-  }
-}
-
-module.exports = { connectGithub, getRepos, getRepoBranches, disconnectGithub };
+};

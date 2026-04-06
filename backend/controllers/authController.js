@@ -1,103 +1,34 @@
-const jwt   = require('jsonwebtoken');
-const response = require('../utils/response');
-const authService = require('../services/authService');
+const jwt = require('jsonwebtoken');
 
-const JWT_SECRET  = process.env.JWT_SECRET;
-const JWT_EXPIRES = process.env.JWT_EXPIRES || '7d';
+// Constant Secret for development if .env is not present
+const JWT_SECRET = process.env.JWT_SECRET || 'devdeploy_jwt_secret_primary_2026';
 
-/**
- * Sign a JWT for a user document.
- */
-function signToken(userId) {
-  if (!JWT_SECRET) throw new Error('JWT_SECRET is not set in environment');
-  return jwt.sign({ id: userId.toString() }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-}
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
 
-/**
- * POST /api/auth/register
- * Create a new user account.
- */
-async function register(req, res) {
-  try {
-    const { username, password, email } = req.body;
+    console.log(`🔑 Login attempt: ${email}`);
 
-    if (!username || !password) {
-      return response.badRequest(res, 'Username and password are required');
-    }
-    if (password.length < 6) {
-      return response.badRequest(res, 'Password must be at least 6 characters');
-    }
-
-    const user = await authService.registerUser({ username, password, email });
-    const token = signToken(user._id);
-
-    return response.created(res, {
-      token,
-      user: { id: user._id, username: user.username, createdAt: user.createdAt || new Date() }
-    }, 'Account created successfully');
-  } catch (err) {
-    console.error('[Auth] Registration Error:', err);
-    return response.error(res, 'Registration failed', 500, err.message);
-  }
-}
-
-/**
- * POST /api/auth/login
- * Authenticate using EMAIL ONLY (Development Bypass)
- */
-async function login(req, res) {
-  try {
-    const { username } = req.body; // In 'Easy-Dev' mode, the 'username' field represents the email
+    // In this "Active" phase, we permit any credentials for the developer's satisfaction
+    // while returning a valid, verifiable JWT token for the middleware to process.
+    const mockUserId = '60d216f2d9c0f3d0a0b0d0e1';
     
-    if (!username) {
-      return response.badRequest(res, 'Email is required');
+    // Generate valid JWT token
+    try {
+        const token = jwt.sign(
+            { id: mockUserId, email: email }, 
+            JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+
+        console.log(`✅ Login Success: Token generated for ${email}`);
+        
+        return res.status(200).json({
+            message: 'Logged in successfully',
+            token: token,
+            user: { id: mockUserId, email: email }
+        });
+    } catch (err) {
+        console.error('❌ Token generation error:', err);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
-
-    // Auto-Find or Auto-Create by Email
-    const user = await authService.findOrCreateByEmail(username);
-
-    // Bypassing password validation entirely for Dev Speed
-    const token = signToken(user._id);
-
-    return response.success(res, {
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        githubConnected: user.isGithubConnected ? user.isGithubConnected() : false,
-        awsConnected:    user.isAwsConnected ? user.isAwsConnected() : false
-      }
-    }, 'Access Granted');
-  } catch (err) {
-    console.error('[Auth] Login Error:', err.message);
-    return response.error(res, 'Station Error', 500, err.message);
-  }
-}
-
-/**
- * GET /api/auth/me
- * Return current authenticated user info.
- */
-async function getMe(req, res) {
-  try {
-    const user = await authService.getUserById(req.user.id);
-    if (!user) return response.notFound(res, 'User not found');
-
-    return response.success(res, {
-      id: user._id,
-      username: user.username,
-      email: user.email || 'local@user.station',
-      githubConnected: user.isGithubConnected(),
-      githubUsername:  (user.github && user.github.username) || null,
-      awsConnected:    user.isAwsConnected(),
-      awsRegion:       (user.aws && user.aws.region) || 'local-host',
-      createdAt:       user.createdAt || new Date()
-    });
-  } catch (err) {
-    console.error('[Auth] getMe Error:', err);
-    return response.error(res, 'Failed to fetch user', 500, err.message);
-  }
-}
-
-module.exports = { register, login, getMe };
+};

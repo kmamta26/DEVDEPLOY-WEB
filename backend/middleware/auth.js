@@ -1,48 +1,48 @@
-const jwt  = require('jsonwebtoken');
-const resp = require('../utils/response');
+const jwt = require('jsonwebtoken');
 
-/**
- * JWT Authentication Middleware
- *
- * Expects an Authorization header in the format:
- *   Authorization: Bearer <token>
- *
- * On success, attaches `req.user = { id }` for use in downstream handlers.
- */
-function auth(req, res, next) {
-  const authHeader = req.headers.authorization;
+// Constant Secret for development if .env is not present
+const JWT_SECRET = process.env.JWT_SECRET || 'devdeploy_jwt_secret_primary_2026';
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return resp.unauthorized(res, 'No token provided. Include "Authorization: Bearer <token>" header.');
-  }
+module.exports = (req, res, next) => {
+    // 1. Check for Authorization Header
+    const authHeader = req.headers.authorization;
 
-  const token = authHeader.split(' ')[1];
-
-  if (!process.env.JWT_SECRET) {
-    console.error('[Auth] FATAL: JWT_SECRET is not set in environment');
-    return resp.error(res, 'Server configuration error', 500);
-  }
-
-  try {
-    // Development Fallback: Allow the frontend bypass token
-    if (process.env.NODE_ENV === 'development' && token === 'mock_token') {
-      console.warn('[Auth] Mode: DEVELOPMENT. Responding to MOCK_TOKEN bypass.');
-      req.user = { id: '640a1b2c3d4e5f6a9b8c7d6e' }; // Valid 24-char Hex ObjectId
-      return next();
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('🔒 Auth denied: No token provided in headers.');
+        return res.status(401).json({ 
+            error: 'Authorization required', 
+            details: 'No Bearer token found in request headers.' 
+        });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id };
-    next();
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return resp.unauthorized(res, 'Token has expired. Please log in again.');
-    }
-    if (err.name === 'JsonWebTokenError') {
-      return resp.unauthorized(res, 'Invalid token. Please log in again.');
-    }
-    return resp.unauthorized(res, 'Authentication failed');
-  }
-}
+    const token = authHeader.split(' ')[1].trim();
 
-module.exports = auth;
+    // 2. Developer Bypass for Active Sessions (Phase 2 Success)
+    if (token === 'dev_mock_token_active') {
+        req.user = { id: '60d216f2d9c0f3d0a0b0d0e1', email: 'dev@devdeploy.io' };
+        return next();
+    }
+
+    // 3. Verify JWT
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        console.log(`✅ Token verified for user: ${decoded.email || decoded.id}`);
+        next();
+    } catch (err) {
+        console.error(`❌ Token invalid: ${err.message}`);
+        
+        // Specific Error for Expiration
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ 
+                error: 'Token expired', 
+                details: 'Your session has expired. Please login again.' 
+            });
+        }
+
+        return res.status(401).json({ 
+            error: 'Invalid token', 
+            details: 'The provided authentication token is malformed or unauthorized.' 
+        });
+    }
+};

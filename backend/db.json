@@ -1,23 +1,11 @@
-[
-  {
-    "id": "node-1775386214696",
-    "_id": "node-1775386214696",
-    "projectName": "ac1",
-    "folderPath": "C:\\Users\\hp\\OneDrive\\Desktop\\dev1\\DevDeploy\\workdir\\node-1775386214696",
-    "url": "/node-1775386214696",
-    "status": "active",
-    "userId": "mock_user_6d616d74",
-    "logs": [
-      "[SYNC] Node node-1775386214696 Online @ Station 5000"
-    ]
-  },
-  {
-    "id": "node-1775387861242",
-    "_id": "node-1775387861242",
-    "projectName": "acoffe",
-    "folderPath": "C:\\Users\\hp\\OneDrive\\Desktop\\dev1\\DevDeploy\\workdir\\node-1775387861242",
-    "url": "/node-1775387861242",
-    "status": "active",
-    "userId": "mock_user_6d616d74"
-  }
-]
+{
+  "users": [
+    {
+      "id": "usr-1775405101620",
+      "_id": "usr-1775405101620",
+      "username": "mamtakambale2005",
+      "email": "mamtakambale2005@gmail.com"
+    }
+  ],
+  "deployments": []
+}
