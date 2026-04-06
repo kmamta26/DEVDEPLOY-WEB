@@ -1,34 +1,66 @@
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Constant Secret for development if .env is not present
 const JWT_SECRET = process.env.JWT_SECRET || 'devdeploy_jwt_secret_primary_2026';
 
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
-    console.log(`🔑 Login attempt: ${email}`);
-
-    // In this "Active" phase, we permit any credentials for the developer's satisfaction
-    // while returning a valid, verifiable JWT token for the middleware to process.
-    const mockUserId = '60d216f2d9c0f3d0a0b0d0e1';
-    
-    // Generate valid JWT token
+// Register User
+exports.register = async (req, res) => {
     try {
-        const token = jwt.sign(
-            { id: mockUserId, email: email }, 
-            JWT_SECRET, 
-            { expiresIn: '7d' }
-        );
+        const { username, email, password } = req.body;
 
-        console.log(`✅ Login Success: Token generated for ${email}`);
-        
-        return res.status(200).json({
-            message: 'Logged in successfully',
-            token: token,
-            user: { id: mockUserId, email: email }
+        // Check if user exists
+        const userExists = await User.findOne({ $or: [{ email }, { username }] });
+        if (userExists) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Create user
+        const user = await User.create({ username, email, password });
+
+        // Generate token
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            token,
+            user: { id: user._id, username, email }
         });
     } catch (err) {
-        console.error('❌ Token generation error:', err);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Login User
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // Find user
+        const user = await User.findOne({ email }).select('+password');
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Generate token
+        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+
+        res.status(200).json({
+            message: 'Logged in successfully',
+            token,
+            user: { id: user._id, username: user.username, email: user.email }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Get User Profile
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };

@@ -43,8 +43,10 @@ mongoose.connection.on('error', () => {
 });
 
 // API Routes
-app.use('/api', authRoutes); // /api/login
+app.use('/api', authRoutes); 
 app.use('/api/projects', projectRoutes);
+app.use('/api/github', githubRoutes);
+app.use('/api/aws', awsRoutes);
 
 // Additional Required APIs for UI logic
 app.get('/api/aws/status', (req, res) => {

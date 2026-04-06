@@ -16,16 +16,16 @@ const RegisterPage = () => {
         setLoading(true);
         setError('');
         try {
-            // Register flow using /login as requested for mock phase
-            const { data } = await api.post('/login', { email, password });
+            // Real registration flow
+            const { data } = await api.post('/register', { username: name, email, password });
             
             // Unified Token Storage
             localStorage.setItem('token', data.token);
-            console.log('✅ New Registry: Token stored as requested.');
+            console.log('✅ New Account Created: Token stored.');
             
             navigate('/dashboard');
         } catch (err) {
-            setError('Registration failed. Please try again.');
+            setError(err.response?.data?.error || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
