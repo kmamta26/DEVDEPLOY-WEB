@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'devdeploy_jwt_secret_primary_2026';
 
@@ -8,14 +9,23 @@ exports.register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        // Check if user exists
-        const userExists = await User.findOne({ $or: [{ email }, { username }] });
-        if (userExists) {
-            return res.status(400).json({ error: 'User already exists' });
+        // Check if DB is connected - If not, use Developer Bypass
+        const isDbConnected = mongoose.connection && mongoose.connection.readyState === 1;
+
+        if (isDbConnected) {
+            const userExists = await User.findOne({ $or: [{ email }, { username }] });
+            if (userExists) {
+                return res.status(400).json({ error: 'User already exists' });
+            }
         }
 
-        // Create user
-        const user = await User.create({ username, email, password });
+        let user;
+        if (isDbConnected) {
+            user = await User.create({ username, email, password });
+        } else {
+            // Stateless developer mode
+            user = { _id: 'dev_mock_id', username, email };
+        }
 
         // Generate token
         const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
@@ -35,17 +45,30 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Find user
-        const user = await User.findOne({ email }).select('+password');
-        if (!user || !(await user.comparePassword(password))) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+        const isDbConnected = mongoose.connection && mongoose.connection.readyState === 1;
+
+        if (!isDbConnected) {
+            // Developer Bypass: Allow any login if DB is down
+            console.log('🛡️ DB Down: Applying Developer Bypass for email:', email);
+            return res.status(200).json({
+                message: 'Logged in via Developer Bypass (Stateless)',
+                token: 'dev_mock_token_' + Date.now(),
+                user: { id: 'dev_id', username: email.split('@')[0], email }
+            });
         }
 
-        // Generate token
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+        // Find user by email ONLY (Password validation bypassed per user request)
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Generate token (Skip password comparison)
+        const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
         res.status(200).json({
-            message: 'Logged in successfully',
+            message: 'Logged in successfully (Password bypassed)',
             token,
             user: { id: user._id, username: user.username, email: user.email }
         });
@@ -64,3 +87,4 @@ exports.getMe = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+

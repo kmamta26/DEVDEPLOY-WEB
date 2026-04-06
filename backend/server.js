@@ -9,7 +9,8 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const githubRoutes = require('./routes/githubRoutes'); // Added for integration console
-const awsRoutes = require('./routes/awsRoutes'); // Added for infrastructure console
+const awsRoutes = require('./routes/awsRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,8 +33,8 @@ app.use(express.json());
 // DB Connection - PHASE 2 (Database
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, {
-    bufferCommands: false, // Prevent operations from stalling if DB is down
-    serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of hanging
+    bufferCommands: true, // Allow operations to queue while connecting
+    serverSelectionTimeoutMS: 5000 
 })
 .then(() => console.log('✅ MongoDB connected successfully.'))
 .catch(err => console.log('⚠️ MongoDB not detected. Using stateless JSON persistence.'));
@@ -47,6 +48,7 @@ app.use('/api', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/aws', awsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Additional Required APIs for UI logic
 app.get('/api/aws/status', (req, res) => {

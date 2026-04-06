@@ -7,7 +7,9 @@ const projectSchema = new mongoose.Schema({
   url: { type: String, required: true },
   githubRepo: { type: String },
   githubUrl: { type: String },
-  status: { type: String, enum: ['deploying', 'running', 'failed', 'Live'], default: 'deploying' },
+  status: { type: String, enum: ['deploying', 'running', 'failed', 'Live', 'active', 'stopped'], default: 'deploying' },
+  uptime: { type: Number, default: 99.99 },
+  lastDeployedAt: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -24,8 +24,20 @@ const DashboardPage = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const { data } = await api.get('/projects');
-            setRecentProjects(data.slice(0, 3));
+            
+            // Fetch Projects
+            const { data: projectsData } = await api.get('/projects');
+            setRecentProjects(projectsData.slice(0, 3));
+
+            // Fetch Stats
+            const { data: statsData } = await api.get('/dashboard/stats');
+            setStats({
+                total: statsData.totalProjects,
+                active: statsData.activeProjects,
+                uptime: statsData.avgUptime + '%',
+                bandwidth: statsData.bandwidth
+            });
+
         } catch (err) {
             console.error('Failed to fetch dashboard data:', err);
         } finally {

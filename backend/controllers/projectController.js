@@ -42,7 +42,7 @@ const updateProjectStatus = async (id, status, buildLog = null) => {
 };
 
 // Export for external controllers (like GitHub)
-exports.runDeploymentPipeline = (projectId, projectPath) => {
+const runDeploymentPipeline = (projectId, projectPath) => {
     updateProjectStatus(projectId, 'building', 'Starting actual deployment pipeline...');
     
     const hasPackageJson = fs.existsSync(path.join(projectPath, 'package.json'));
@@ -87,6 +87,8 @@ exports.runDeploymentPipeline = (projectId, projectPath) => {
         });
     });
 };
+
+exports.runDeploymentPipeline = runDeploymentPipeline;
 
 exports.getProjects = async (req, res) => {
     try {
