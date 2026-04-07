@@ -11,7 +11,6 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    // Check for existing session on mount
     useEffect(() => {
         if (localStorage.getItem('token')) {
             navigate('/dashboard');
@@ -25,17 +24,13 @@ const LoginPage = () => {
         setSuccess('');
 
         try {
-            console.log('🚀 Attempting login for:', email);
-            const response = await api.post('/login', { email, password });
-            const { data } = response;
+            const { data } = await api.post('/login', { email, password });
             
-            // Flexible token retrieval (Root or .data for different Axios configurations)
             const token = data.token || data.data?.token;
             const user = data.user || data.data?.user;
 
             if (!token) throw new Error('Authentication response incomplete');
 
-            // Unified Token Storage
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             
@@ -43,27 +38,7 @@ const LoginPage = () => {
             setTimeout(() => navigate('/dashboard'), 800);
 
         } catch (err) {
-            console.warn('⚠️ Login Exception:', err);
-            
-            // "Indestructible Login" Logic: Seamless Failover for Demo Environments (e.g. Netlify)
-            // If the backend is missing (404/Connection Issue), allow access to "Show it without any error"
-            const isUnreachable = !err.response || err.response.status === 404 || err.code === 'ERR_NETWORK';
-            const isProductionDemo = window.location.hostname.includes('netlify.app') || window.location.hostname === 'localhost';
-
-            if (isUnreachable && isProductionDemo) {
-                console.info('⚡ DevDeploy Failover: Backend unreachable. Initializing Demo Session.');
-                
-                const demoToken = `dev_demo_token_${Date.now()}`;
-                const demoUser = { id: 'demo_0x77', username: email.split('@')[0], email };
-
-                localStorage.setItem('token', demoToken);
-                localStorage.setItem('user', JSON.stringify(demoUser));
-                
-                setSuccess('Demo Session Activated (Success)');
-                setTimeout(() => navigate('/dashboard'), 1200);
-            } else {
-                setError(err.response?.data?.error || 'Login failed. Please verify your credentials or server status.');
-            }
+            setError(err.response?.data?.error || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
@@ -148,4 +123,5 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
 

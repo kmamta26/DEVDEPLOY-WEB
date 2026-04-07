@@ -19,10 +19,8 @@ const RegisterPage = () => {
         setSuccess('');
 
         try {
-            console.log('🚀 Registering User:', email);
             const { data } = await api.post('/register', { username: name, email, password });
             
-            // Flexible token retrieval
             const token = data.token || data.data?.token;
             if (!token) throw new Error('Registration failed');
 
@@ -33,23 +31,7 @@ const RegisterPage = () => {
             setTimeout(() => navigate('/dashboard'), 1000);
 
         } catch (err) {
-            console.warn('⚠️ Registration Exception:', err);
-
-            // Failover for Demo Environments
-            const isUnreachable = !err.response || err.response.status === 404 || err.code === 'ERR_NETWORK';
-            const isProductionDemo = window.location.hostname.includes('netlify.app') || window.location.hostname === 'localhost';
-
-            if (isUnreachable && isProductionDemo) {
-                console.info('⚡ DevDeploy Failover: Backend unreachable. Creating Demo Account.');
-                
-                localStorage.setItem('token', `dev_demo_reg_${Date.now()}`);
-                localStorage.setItem('user', JSON.stringify({ id: 'demo_0x77', username: name, email }));
-                
-                setSuccess('Demo Account Created (Local)');
-                setTimeout(() => navigate('/dashboard'), 1500);
-            } else {
-                setError(err.response?.data?.error || 'Registration failed. Please check your data or server status.');
-            }
+            setError(err.response?.data?.error || 'Registration failed. Please check your data or server status.');
         } finally {
             setLoading(false);
         }

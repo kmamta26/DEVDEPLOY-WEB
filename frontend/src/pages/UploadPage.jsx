@@ -27,34 +27,32 @@ const UploadPage = () => {
         if (!file) return;
         setUploading(true);
         setStatus(null);
+        setProgress(10);
         
-        let simProgress = 0;
+        let simProgress = 10;
         const interval = setInterval(() => {
-            simProgress += Math.random() * 20;
-            if (simProgress >= 90) clearInterval(interval);
-            setProgress(Math.min(simProgress, 90));
-        }, 300);
+            simProgress += Math.random() * 15;
+            if (simProgress >= 95) clearInterval(interval);
+            setProgress(Math.min(simProgress, 95));
+        }, 400);
 
         const formData = new FormData();
         formData.append('zipFile', file);
         formData.append('name', file.name.split('.')[0]);
 
         try {
-            const { data } = await api.post('/projects/upload', formData, {
-                onUploadProgress: (progressEvent) => {
-                    const actualProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    if (actualProgress > simProgress) setProgress(actualProgress);
-                }
-            });
+            const { data } = await api.post('/projects/upload', formData);
+            
             clearInterval(interval);
             setProgress(100);
-            setStatus({ type: 'success', message: 'Archive uploaded successfully! Redirecting...' });
-            setTimeout(() => navigate(`/projects/${data.id || data._id}`), 2000);
+            setStatus({ type: 'success', message: 'Archive deployed successfully! Launching nodes...' });
+            
+            // Standardizing navigation to the project dashboard or projects list
+            setTimeout(() => navigate('/projects'), 1500);
         } catch (err) {
-            console.error('Frontend Upload Error Details:', err);
+            console.error('Upload Error:', err);
             clearInterval(interval);
-            const errMsg = err.response?.data?.error || err.response?.data?.details || 'Deployment failed. Check your network.';
-            setStatus({ type: 'error', message: errMsg });
+            setStatus({ type: 'error', message: err.response?.data?.error || 'Deployment failed. Please check your connection.' });
         } finally {
             setUploading(false);
         }
