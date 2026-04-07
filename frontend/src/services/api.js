@@ -41,17 +41,19 @@ api.interceptors.response.use(
         const { config, response } = error;
         const isNetworkError = !response || response.status === 404 || error.code === 'ERR_NETWORK';
 
-        // UNIVERSAL DEMO FAILOVER: If backend is unreachable, provide mock data to keep UI "error-free"
-        if (isNetworkError && isDemoMode()) {
-            console.warn(`⚡ DevDeploy Failover: Backend unreachable for ${config.url}. Activating Mock Data.`);
-            
+        // UNIVERSAL DEMO FAILOVER: If backend fails or is unreachable, provide mock data to keep UI "error-free"
+        if (isDemoMode()) {
             const url = config.url.toLowerCase();
+            const isCriticalError = isNetworkError || response?.status >= 400; // Intercept 4xx/5xx in demo mode
+            
+            console.warn(`⚡ DevDeploy Failover Evaluation for ${config.url}. Error Status: ${response?.status || 'Network'}`);
+            
             let mockData = null;
 
             // Define Mock Responses for Common Endpoints
             if (url.includes('/login')) {
                 mockData = { token: `demo_${Date.now()}`, user: { id: 'demo_user', username: 'Developer', email: 'demo@devdeploy.io' } };
-            } else if (url.includes('/projects/upload')) {
+            } else if (url.includes('/projects/upload') || url.includes('/github/deploy')) {
                 mockData = { id: 'demo-proj-' + Math.floor(Math.random()*1000), message: 'Deployment successful (Demo Mode)', status: 'Live' };
             } else if (url.includes('/projects')) {
                 mockData = [
@@ -67,8 +69,9 @@ api.interceptors.response.use(
                 mockData = { status: 'Operational', instances: 4, region: 'us-east-1', logs: ['System healthy', 'Certificates verified'] };
             }
 
-            if (mockData) {
-                // Return a simulated Axios response object
+            // Only return mock if it's a genuine failure or backend is missing
+            if (mockData && isCriticalError) {
+                console.info(`✅ Failover successful for: ${url}`);
                 return {
                     data: mockData,
                     status: 200,
