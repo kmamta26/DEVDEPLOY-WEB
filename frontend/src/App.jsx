@@ -15,7 +15,7 @@ import RegisterPage from './pages/RegisterPage';
 
 // Protected Layout
 const DashboardLayout = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || localStorage.getItem('devdeploy_token');
     
     if (!token) {
         return <Navigate to="/login" replace />;

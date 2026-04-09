@@ -12,7 +12,7 @@ const LoginPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (localStorage.getItem('token')) {
+        if (localStorage.getItem('token') || localStorage.getItem('devdeploy_token')) {
             navigate('/dashboard');
         }
     }, [navigate]);

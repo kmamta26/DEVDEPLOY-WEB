@@ -6,7 +6,9 @@ const Sidebar = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
+        localStorage.removeItem('token');
         localStorage.removeItem('devdeploy_token');
+        localStorage.removeItem('user');
         navigate('/login');
     };
 

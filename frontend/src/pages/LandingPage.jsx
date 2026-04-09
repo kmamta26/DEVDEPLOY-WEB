@@ -7,6 +7,12 @@ import {
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    
+    React.useEffect(() => {
+        if (localStorage.getItem('token') || localStorage.getItem('devdeploy_token')) {
+            navigate('/dashboard');
+        }
+    }, [navigate]);
 
     const features = [
         { icon: <Rocket size={24} />, title: "Instant Deployment", desc: "Push your code and watch it go live in seconds with our optimized build pipeline." },

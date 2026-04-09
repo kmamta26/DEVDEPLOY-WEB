@@ -11,6 +11,12 @@ const RegisterPage = () => {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        if (localStorage.getItem('token') || localStorage.getItem('devdeploy_token')) {
+            navigate('/dashboard');
+        }
+    }, [navigate]);
 
     const handleRegister = async (e) => {
         e.preventDefault();
