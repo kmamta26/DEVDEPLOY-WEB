@@ -50,10 +50,15 @@ exports.login = async (req, res) => {
         if (!isDbConnected) {
             // Developer Bypass: Allow any login if DB is down
             console.log('🛡️ DB Down: Applying Developer Bypass for email:', email);
+            
+            // Generate a VALID JWT even in bypass mode so auth middleware accepts it
+            const devUser = { _id: 'dev_id_' + email.split('@')[0], email };
+            const token = jwt.sign({ id: devUser._id, email: devUser.email }, JWT_SECRET, { expiresIn: '7d' });
+
             return res.status(200).json({
                 message: 'Logged in via Developer Bypass (Stateless)',
-                token: 'dev_mock_token_' + Date.now(),
-                user: { id: 'dev_id', username: email.split('@')[0], email }
+                token,
+                user: { id: devUser._id, username: email.split('@')[0], email }
             });
         }
 
@@ -80,6 +85,14 @@ exports.login = async (req, res) => {
 // Get User Profile
 exports.getMe = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            return res.json({ 
+                _id: req.user.id, 
+                id: req.user.id,
+                email: req.user.email, 
+                username: req.user.email?.split('@')[0] || 'Developer' 
+            });
+        }
         const user = await User.findById(req.user.id);
         if (!user) return res.status(404).json({ error: 'User not found' });
         res.json(user);

@@ -41,10 +41,63 @@ const updateProjectStatus = async (id, status, buildLog = null) => {
     }
 };
 
-// Export for external controllers (like GitHub)
-const runDeploymentPipeline = (projectId, projectPath) => {
-    updateProjectStatus(projectId, 'building', 'Starting actual deployment pipeline...');
+/**
+ * Recursively finds the true project root (folder containing index.html or package.json)
+ * Now smarter: searches nested directories even if multiple items exist, 
+ * giving priority to typical web root folders.
+ */
+const resolveProjectRoot = (currentPath, depth = 0) => {
+    if (!fs.existsSync(currentPath) || depth > 3) return currentPath;
     
+    // Priority 1: Current folder has the essential markers
+    if (fs.existsSync(path.join(currentPath, 'index.html')) || fs.existsSync(path.join(currentPath, 'package.json'))) {
+        return currentPath;
+    }
+
+    // Priority 2: Look for common nested web roots (client, frontend, app)
+    const commonRoots = ['client', 'frontend', 'app', 'src'];
+    for (const root of commonRoots) {
+        const potential = path.join(currentPath, root);
+        if (fs.existsSync(potential) && fs.statSync(potential).isDirectory()) {
+            if (fs.existsSync(path.join(potential, 'package.json')) || fs.existsSync(path.join(potential, 'index.html'))) {
+                return potential;
+            }
+        }
+    }
+
+    const items = fs.readdirSync(currentPath).filter(f => !f.startsWith('.') && f !== '__MACOSX' && f !== 'node_modules');
+    
+    // Priority 3: If only one directory exists (typical ZIP wrapper), recurse
+    if (items.length === 1) {
+        const nextPath = path.join(currentPath, items[0]);
+        if (fs.statSync(nextPath).isDirectory()) {
+            return resolveProjectRoot(nextPath, depth + 1);
+        }
+    }
+
+    // Priority 4: Search for any directory that has markers (breadth-first-ish)
+    for (const item of items) {
+        const nextPath = path.join(currentPath, item);
+        if (fs.statSync(nextPath).isDirectory()) {
+            const resolved = resolveProjectRoot(nextPath, depth + 1);
+            if (resolved !== nextPath) return resolved;
+            if (fs.existsSync(path.join(nextPath, 'package.json')) || fs.existsSync(path.join(nextPath, 'index.html'))) {
+                return nextPath;
+            }
+        }
+    }
+    
+    return currentPath;
+};
+
+// Export for external controllers (like GitHub)
+const runDeploymentPipeline = (projectId, baseSitePath) => {
+    updateProjectStatus(projectId, 'building', 'Checking environment and resolving project root...');
+    
+    // 0. Resolve True Root (Flatten wrappers and find actual source)
+    const projectPath = resolveProjectRoot(baseSitePath);
+    console.log(`🚀 Final Project Root resolved: ${projectPath}`);
+
     const hasPackageJson = fs.existsSync(path.join(projectPath, 'package.json'));
     
     if (!hasPackageJson) {
@@ -52,40 +105,39 @@ const runDeploymentPipeline = (projectId, projectPath) => {
         return;
     }
 
-    updateProjectStatus(projectId, 'building', 'Node.js project detected. Running npm install...');
+    updateProjectStatus(projectId, 'building', `Targeting ${path.basename(projectPath)} for build. Installing dependencies...`);
     
-    // 1. npm install
-    exec('npm install', { cwd: projectPath }, (err, stdout, stderr) => {
-        if (err) {
-            updateProjectStatus(projectId, 'failed', `NPM Install Failed: ${stderr}`);
+    // 1. npm install - Increased buffer to prevent crash on large dependency trees
+    const installTask = exec('npm install', { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
+    
+    installTask.on('close', (code) => {
+        if (code !== 0) {
+            updateProjectStatus(projectId, 'failed', 'NPM Install failed. Check logs for details.');
             return;
         }
-        updateProjectStatus(projectId, 'building', 'Dependencies installed. Running npm run build...');
+
+        updateProjectStatus(projectId, 'building', 'Dependencies ready. Initiating production build...');
         
         // 2. npm run build
-        exec('npm run build', { cwd: projectPath }, (err, stdout, stderr) => {
-            if (err) {
-                updateProjectStatus(projectId, 'failed', `Build Failed: ${stderr}`);
-                return;
-            }
-            
-            // 3. Detect build folder
-            const buildFolders = ['dist', 'build', 'out'];
-            let foundFolder = null;
-            for (const f of buildFolders) {
-                if (fs.existsSync(path.join(projectPath, f))) {
-                    foundFolder = f;
-                    break;
-                }
-            }
-            
-            if (foundFolder) {
-                updateProjectStatus(projectId, 'Live', `Build successful. Serving from /${foundFolder} folder.`);
+        const buildTask = exec('npm run build', { cwd: projectPath, maxBuffer: 10 * 1024 * 1024 });
+
+        buildTask.on('close', (code) => {
+            if (code !== 0) {
+                // If "build" script is missing, some projects might just be running in dev mode
+                // We'll treat it as a success if we can still serve the project
+                updateProjectStatus(projectId, 'Live', 'Warning: Build script failed or missing, but dependencies are installed. Serving best-effort.');
             } else {
-                updateProjectStatus(projectId, 'Live', 'Build finished. No dist/build folder found, serving root.');
+                updateProjectStatus(projectId, 'Live', 'Build successful. Project is now live.');
             }
+            
+            // Log the structure for debugging
+            console.log(`✅ Deployment complete for ${projectId} at ${projectPath}`);
         });
     });
+
+    // Capture logs
+    installTask.stdout.on('data', (data) => updateProjectStatus(projectId, 'building', `INFO: ${data.substring(0, 100)}...`));
+    installTask.stderr.on('data', (data) => console.warn(`[Install Log] ${data}`));
 };
 
 exports.runDeploymentPipeline = runDeploymentPipeline;

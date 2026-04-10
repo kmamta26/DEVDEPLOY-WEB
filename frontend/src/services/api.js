@@ -44,7 +44,8 @@ api.interceptors.response.use(
         // UNIVERSAL DEMO FAILOVER: If backend fails or is unreachable, provide mock data to keep UI "error-free"
         if (isDemoMode()) {
             const url = config.url.toLowerCase();
-            const isCriticalError = isNetworkError || response?.status >= 400; // Intercept 4xx/5xx in demo mode
+            // Don't intercept 401s - we want the user to re-authenticate if their token is invalid
+            const isCriticalError = isNetworkError || (response?.status >= 400 && response?.status !== 401); 
             
             console.warn(`⚡ DevDeploy Failover Evaluation for ${config.url}. Error Status: ${response?.status || 'Network'}`);
             

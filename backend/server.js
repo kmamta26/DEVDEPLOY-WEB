@@ -66,30 +66,70 @@ app.get('/api/aws/status', (req, res) => {
 const CLIENT_DIST = path.resolve(__dirname, '../frontend/dist');
 app.use(express.static(CLIENT_DIST));
 
-// Intelligent Project Hosting Middleware (Enhanced Search)
+// Intelligent Project Hosting Middleware (Recursive Search)
 app.use('/sites/:id', (req, res, next) => {
     const projectId = req.params.id;
     let projectPath = path.resolve(__dirname, 'sites', projectId);
 
     if (!fs.existsSync(projectPath)) return res.status(404).json({ error: 'Project not found' });
 
-    // 1. Check if the root has only one folder (common ZIP wrapper)
-    const items = fs.readdirSync(projectPath);
-    if (items.length === 1 && fs.statSync(path.join(projectPath, items[0])).isDirectory()) {
-        projectPath = path.join(projectPath, items[0]);
+    // ENFORCE TRAILING SLASH for relative path resolution stability
+    if (!req.originalUrl.endsWith('/') && !req.path.includes('.')) {
+        return res.redirect(301, req.originalUrl + '/');
+    }
+
+    // Recursive helper to find true root (index.html or package.json)
+    const resolveRoot = (current) => {
+        const items = fs.readdirSync(current).filter(f => !f.startsWith('.') && f !== '__MACOSX');
+        
+        // If index.html exists here, this is the root
+        if (fs.existsSync(path.join(current, 'index.html'))) return current;
+
+        // If only one directory exists (typical ZIP wrapper), recurse into it
+        if (items.length === 1) {
+            const nextPath = path.join(current, items[0]);
+            if (fs.statSync(nextPath).isDirectory()) {
+                return resolveRoot(nextPath);
+            }
+        }
+        return current;
+    };
+
+    try {
+        projectPath = resolveRoot(projectPath);
+    } catch (e) {
+        console.error('Root resolution error:', e);
     }
 
     // 2. Look for build outputs (dist, build, out, etc.)
     const buildFolders = ['dist', 'build', 'out', 'public'];
+    let effectiveRoot = projectPath;
+    
     for (const folder of buildFolders) {
         const fullBuildPath = path.join(projectPath, folder);
         if (fs.existsSync(fullBuildPath)) {
-            return express.static(fullBuildPath)(req, res, next);
+            effectiveRoot = fullBuildPath;
+            break;
         }
     }
 
-    // 3. Just serve the path
-    return express.static(projectPath)(req, res, next);
+    // SPA Routing Logic:
+    // If request is for a file that exists, serve it
+    // If not, and it's not a direct file request (no extension), serve index.html
+    const requestedPath = path.join(effectiveRoot, req.path === '/' ? 'index.html' : req.path);
+    const hasExtension = path.extname(req.path) !== '';
+
+    if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isFile()) {
+        return res.sendFile(requestedPath);
+    } else if (!hasExtension || req.path === '/') {
+        const indexPath = path.join(effectiveRoot, 'index.html');
+        if (fs.existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+        }
+    }
+
+    // Fallback to standard static serving
+    return express.static(effectiveRoot)(req, res, next);
 });
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
