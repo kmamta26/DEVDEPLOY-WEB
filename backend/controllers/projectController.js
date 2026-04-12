@@ -145,13 +145,26 @@ exports.runDeploymentPipeline = runDeploymentPipeline;
 
 exports.getProjects = async (req, res) => {
     try {
-        const jsonProjects = readProjectsJson();
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}`;
+
+        let projects = readProjectsJson();
         if (mongoose.connection.readyState === 1) {
             const dbProjects = await Project.find({}).sort({ createdAt: -1 });
-            return res.status(200).json(dbProjects.length > 0 ? dbProjects : jsonProjects);
+            if (dbProjects.length > 0) projects = dbProjects;
         }
-        return res.status(200).json(jsonProjects);
-    } catch { return res.status(200).json(readProjectsJson()); }
+
+        // Dynamically fix URLs to match current host
+        const fixedProjects = projects.map(p => ({
+            ...p,
+            url: p.url ? p.url.replace(/http:\/\/localhost:\d+/, baseUrl) : `${baseUrl}/sites/${p.id || p._id}`
+        }));
+
+        return res.status(200).json(fixedProjects);
+    } catch (err) { 
+        return res.status(500).json({ error: err.message }); 
+    }
 };
 
 exports.getProjectLogs = (req, res) => {
