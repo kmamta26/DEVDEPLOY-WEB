@@ -624,7 +624,7 @@
     <!-- ║     JAVASCRIPT                      ║ -->
     <!-- ╚══════════════════════════════════════╝ -->
     <script>
-        const API = '/api';
+        const API = 'import.meta.env.VITE_API_URL';
         let token = localStorage.getItem('token'), username = localStorage.getItem('username');
 
         /* ── Show one section, hide all others ── */
