@@ -53,5 +53,16 @@
     "url": "http://localhost:5000/sites/541e5a8b-6f41-48cf-8c46-eba2ab1e1e3a",
     "type": "ZIP",
     "createdAt": "2026-04-11T12:54:35.636Z"
+  },
+  {
+    "id": "02b103d8-5d78-4496-a2c5-098933d58023",
+    "_id": "02b103d8-5d78-4496-a2c5-098933d58023",
+    "name": "ecommerce-store-master",
+    "filename": "1775985512987-ecommerce-store-master.zip",
+    "size": 253026,
+    "status": "failed",
+    "url": "http://localhost:5000/sites/02b103d8-5d78-4496-a2c5-098933d58023",
+    "type": "ZIP",
+    "createdAt": "2026-04-12T09:18:33.248Z"
   }
 ]

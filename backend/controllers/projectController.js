@@ -176,6 +176,11 @@ exports.uploadProject = async (req, res) => {
         const projectSiteDir = path.resolve(SITES_DIR, newId);
         console.log(`📂 Preparing extraction for project "${projectName}" (ID: ${newId}) at: ${projectSiteDir}`);
 
+        // Get protocol and host for dynamic URL generation
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}`;
+
         // EXTRACTION
         try {
             const zip = new AdmZip(req.file.path);
@@ -183,12 +188,12 @@ exports.uploadProject = async (req, res) => {
             console.log(`✅ Extraction completed successfully for ${newId}`);
         } catch (extractErr) {
             console.error(`❌ Extraction failed for ${newId}:`, extractErr);
-            return res.status(500).json({ error: 'Extraction failed' });
+            return res.status(500).json({ error: 'Extraction failed: ' + extractErr.message });
         }
 
         const newProject = {
             id: newId, _id: newId, name: projectName, filename: req.file.filename,
-            size: req.file.size, status: 'building', url: `http://localhost:5000/sites/${newId}`,
+            size: req.file.size, status: 'building', url: `${baseUrl}/sites/${newId}`,
             type: 'ZIP', createdAt: new Date()
         };
 

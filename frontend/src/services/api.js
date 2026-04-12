@@ -9,7 +9,10 @@ const api = axios.create({
 
 // Helper to determine if we should use demo failover
 const isDemoMode = () => {
-    return window.location.hostname === 'localhost' || window.location.hostname.includes('netlify.app');
+    return window.location.hostname === 'localhost' || 
+           window.location.hostname.includes('netlify.app') || 
+           window.location.hostname.includes('railway.app') ||
+           window.location.hostname.includes('up.railway.app');
 };
 
 // Request Interceptor: Attach JWT Token
