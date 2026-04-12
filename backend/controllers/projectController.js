@@ -6,10 +6,11 @@ const { exec } = require('child_process');
 const Project = require('../models/Project');
 const mongoose = require('mongoose');
 
-const DATA_DIR = path.join(__dirname, '../data');
+const BACKEND_ROOT = path.resolve(__dirname, '..');
+const DATA_DIR = path.resolve(BACKEND_ROOT, 'data');
 const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
-const SITES_DIR = path.join(__dirname, '../sites');
-const LOGS_DIR = path.join(__dirname, '../logs');
+const SITES_DIR = path.resolve(BACKEND_ROOT, 'sites');
+const LOGS_DIR = path.resolve(BACKEND_ROOT, 'logs');
 
 // Ensure directories exist
 [DATA_DIR, SITES_DIR, LOGS_DIR].forEach(dir => {
@@ -172,13 +173,16 @@ exports.uploadProject = async (req, res) => {
         if (exists) projectName = `${projectName}_${Math.floor(Math.random() * 1000)}`;
 
         const newId = uuidv4();
-        const projectSiteDir = path.join(SITES_DIR, newId);
+        const projectSiteDir = path.resolve(SITES_DIR, newId);
+        console.log(`📂 Preparing extraction for project "${projectName}" (ID: ${newId}) at: ${projectSiteDir}`);
 
         // EXTRACTION
         try {
             const zip = new AdmZip(req.file.path);
             zip.extractAllTo(projectSiteDir, true);
+            console.log(`✅ Extraction completed successfully for ${newId}`);
         } catch (extractErr) {
+            console.error(`❌ Extraction failed for ${newId}:`, extractErr);
             return res.status(500).json({ error: 'Extraction failed' });
         }
 

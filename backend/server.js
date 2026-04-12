@@ -16,13 +16,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/devdeploy';
 
+// Absolute Paths for essential directories
+const BACKEND_ROOT = __dirname;
+const UPLOADS_DIR = path.resolve(BACKEND_ROOT, 'uploads');
+const DATA_DIR = path.resolve(BACKEND_ROOT, 'data');
+const SITES_DIR = path.resolve(BACKEND_ROOT, 'sites');
+const LOGS_DIR = path.resolve(BACKEND_ROOT, 'logs');
+
 // Ensure essential directories exist
-const REQUIRED_DIRS = ['uploads', 'data', 'sites'];
-REQUIRED_DIRS.forEach(dir => {
-    const d = path.resolve(__dirname, dir);
+[UPLOADS_DIR, DATA_DIR, SITES_DIR, LOGS_DIR].forEach(d => {
     if (!fs.existsSync(d)) {
-        console.log(`📁 Initializing directory: ${dir}`);
+        console.log(`📁 Initializing directory: ${path.basename(d)} at ${d}`);
         fs.mkdirSync(d, { recursive: true });
+    } else {
+        console.log(`✅ Verified directory: ${path.basename(d)} at ${d}`);
     }
 });
 
@@ -69,9 +76,16 @@ app.use(express.static(CLIENT_DIST));
 // Intelligent Project Hosting Middleware (Recursive Search)
 app.use('/sites/:id', (req, res, next) => {
     const projectId = req.params.id;
-    let projectPath = path.resolve(__dirname, 'sites', projectId);
+    let projectPath = path.resolve(SITES_DIR, projectId);
 
-    if (!fs.existsSync(projectPath)) return res.status(404).json({ error: 'Project not found' });
+    if (!fs.existsSync(projectPath)) {
+        console.warn(`❌ Site Access Failure: Project dir not found at ${projectPath}`);
+        return res.status(404).json({ 
+            error: 'Project not found', 
+            details: 'The project files could not be located on the server cluster.',
+            searchedPath: projectPath 
+        });
+    }
 
     // ENFORCE TRAILING SLASH for relative path resolution stability
     if (!req.originalUrl.endsWith('/') && !req.path.includes('.')) {
@@ -80,17 +94,21 @@ app.use('/sites/:id', (req, res, next) => {
 
     // Recursive helper to find true root (index.html or package.json)
     const resolveRoot = (current) => {
-        const items = fs.readdirSync(current).filter(f => !f.startsWith('.') && f !== '__MACOSX');
-        
-        // If index.html exists here, this is the root
-        if (fs.existsSync(path.join(current, 'index.html'))) return current;
+        try {
+            const items = fs.readdirSync(current).filter(f => !f.startsWith('.') && f !== '__MACOSX');
+            
+            // If index.html exists here, this is the root
+            if (fs.existsSync(path.join(current, 'index.html'))) return current;
 
-        // If only one directory exists (typical ZIP wrapper), recurse into it
-        if (items.length === 1) {
-            const nextPath = path.join(current, items[0]);
-            if (fs.statSync(nextPath).isDirectory()) {
-                return resolveRoot(nextPath);
+            // If only one directory exists (typical ZIP wrapper), recurse into it
+            if (items.length === 1) {
+                const nextPath = path.join(current, items[0]);
+                if (fs.statSync(nextPath).isDirectory()) {
+                    return resolveRoot(nextPath);
+                }
             }
+        } catch (e) {
+            console.error('Root discovery error:', e);
         }
         return current;
     };
@@ -114,9 +132,8 @@ app.use('/sites/:id', (req, res, next) => {
     }
 
     // SPA Routing Logic:
-    // If request is for a file that exists, serve it
-    // If not, and it's not a direct file request (no extension), serve index.html
-    const requestedPath = path.join(effectiveRoot, req.path === '/' ? 'index.html' : req.path);
+    const relPath = req.path === '/' ? 'index.html' : req.path;
+    const requestedPath = path.join(effectiveRoot, relPath);
     const hasExtension = path.extname(req.path) !== '';
 
     if (fs.existsSync(requestedPath) && fs.statSync(requestedPath).isFile()) {
