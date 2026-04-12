@@ -1,0 +1,177 @@
+*{
+    margin: 0%;
+    padding: 0%;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+    overflow-x: hidden;
+}
+.main{
+   height: 680px;
+   width: 100%;
+   display: flex;
+   background-color: rgb(240, 233, 233);
+}
+.hero-section h1{
+    height: 50px;
+    width: 100%;
+    font-size: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(12, 1, 42);
+}
+.hero-section{
+     height: 675px;
+     width: 90%;
+     overflow-y: hidden;
+}
+.hero-section h3{
+    margin-left: 100px;
+}
+.ri-phone-line{
+    font-size: 300%;
+    background-color: #fff;
+    margin-left: 160px;
+    border: 1px solid grey;
+    color: rgb(42, 5, 144); 
+}
+.hero-section h6{
+    margin-left: 16%;
+    color: gray;
+}
+
+.box-info{
+    height:12%;
+    width: 85%;
+    margin-left: 7%;
+    display: flex;
+    gap: 10%; 
+}
+
+.info1{
+    height: 100%;
+    width: 28%; 
+}
+
+.info1 h5{
+    margin-left: 130px;
+    margin-top: 10px;
+    color: gray;
+    font-size: 16px;
+}
+.info2{
+    height: 100%;
+    width: 28%;
+}
+.info2 h5{
+    margin-left: 30px;
+    margin-top: 10px;
+    color: gray;
+    font-size: 16px;
+}
+#a123{
+    padding-left: 30px;
+}
+.ri-mail-line{
+font-size: 300%;
+background-color: #fff;
+margin-left: 100px;
+border: 1px solid grey;
+color: rgb(42, 5, 144); 
+}
+.info3{
+    height: 100%;
+    width: 28%;
+    text-decoration: none;
+}
+.info3 h5{
+    margin-left: 30px;
+    margin-top: 10px;
+    color: gray;
+    font-size: 16px;
+}
+
+.ri-map-pin-fill{
+    font-size: 300%;
+    background-color: #fff;
+    margin-left: 130px;
+    border: 1px solid grey;
+    color: rgb(42, 5, 144);
+    
+}
+
+.hero-section h2{
+    height: 30px;
+    width: 85%;
+    margin-left: 24%;
+    margin-top: 10px;
+}
+
+
+
+
+
+.second-section{
+    height: 40%;
+    width: 85%;
+    margin-left: 100px;
+    display: flex;
+    margin-top: 8px;
+}
+#abut1{
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    margin-left: 20%;
+     }
+#abut1 input{
+    height: 40px;
+    width: 60%;
+}
+#abut1 input{
+    color: rgb(19, 0, 76);
+}
+#abut2{
+    height: 100%;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+ }
+#abut2 input{
+    height: 40px;
+    width: 60%;
+}
+#abut2 input{
+    color: rgb(19, 0, 76);
+}
+
+
+#label1{
+    margin-left: 24%; 
+}
+#label1 input{
+    height: 50px;
+    width: 73%;
+}
+
+#Submit-From{
+    margin-left: 76%;
+    margin-top: 8px;
+    height: 40px;
+    width: 15%;
+    background-color: rgb(19, 0, 76);
+    color: #fff;
+}
+#Submit-From i{
+    color: rgb(167, 167, 18);
+}
+.info1 a{
+    text-decoration: none;
+}
+.info2 a{
+    text-decoration: none;
+}
+.info3 a{
+    text-decoration: none;
+}

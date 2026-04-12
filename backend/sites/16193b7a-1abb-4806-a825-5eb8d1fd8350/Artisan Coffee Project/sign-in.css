@@ -1,0 +1,112 @@
+*{
+   margin: 0%;
+   padding: 0%;
+   box-sizing: border-box;
+
+}
+.main-div{
+    height: 800px;
+    width: 100%;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.Place-Login{
+    height: 450px;
+    width: 25%;
+    background-color: #65382c;
+    border-radius: 10px;
+}
+.index{
+    display: flex;
+    gap: 10px;
+    margin-top: 50px;
+    margin-left: 30%;
+}
+#Place{
+    color: #ebe6e6;
+}
+#login{
+    height: 38px;
+    width: 35%;
+    background-color: rgb(243, 48, 103);
+    text-align: center;
+    color: #ebe6e6;
+
+}
+#id{
+    height: 38px;
+    width: 70%;
+    margin-left:70px;
+    margin-top: 30px;
+    border: none;
+    border-bottom: 1px solid #000;
+    background-color: transparent;
+}
+#id::placeholder{
+    padding-left: 20px;
+    color: #f6ecec;
+}
+#email{
+    height: 38px;
+    width: 70%;
+    margin-left:70px;
+    margin-top: 30px;
+    border: none;
+   border-bottom: 1px solid #000;
+   background-color: transparent;
+}
+#email::placeholder{
+    padding-left: 20px;
+    color: #f6eeee;
+}
+#password{
+    height: 38px;
+    width: 70%;
+    margin-left:70px;
+    margin-top: 30px;
+    border: none;
+    border-bottom: 1px solid #000;
+    background-color: transparent;
+}
+#password::placeholder{
+    padding-left: 20px;
+    color: #f1e8e8;
+    
+}
+#text-pass{
+    padding-left: 74px;
+    font-size: 13px;
+    color: gray;
+}
+input{
+    border: none;
+    outline: none;
+}
+a{
+    text-decoration: none;
+}
+#Login-buttn:hover {
+    height: 38px;
+    width: 55%;
+    margin-left:90px;
+    margin-top: 40px;
+    border: 2px solid rgb(243, 48, 103);
+    outline: none; 
+    font-size: 17px;
+    box-shadow: 1px 1px 5px 5px #979696;
+    text-decoration: none;
+}
+#Login-buttn{
+    height: 38px;
+    width: 55%;
+    margin-left:90px;
+    margin-top: 40px;
+    background-color: rgb(243, 48, 103);
+    border: none;
+    outline: none; 
+    font-size: 17px;
+    box-shadow: 1px 1px 5px 5px #979696;
+    text-decoration: none;
+}

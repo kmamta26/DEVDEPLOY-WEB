@@ -55,14 +55,14 @@
     "createdAt": "2026-04-11T12:54:35.636Z"
   },
   {
-    "id": "02b103d8-5d78-4496-a2c5-098933d58023",
-    "_id": "02b103d8-5d78-4496-a2c5-098933d58023",
-    "name": "ecommerce-store-master",
-    "filename": "1775985512987-ecommerce-store-master.zip",
-    "size": 253026,
-    "status": "failed",
-    "url": "http://localhost:5000/sites/02b103d8-5d78-4496-a2c5-098933d58023",
+    "id": "d8b1bc0d-5558-4a0a-a5c0-62f03af12ff6",
+    "_id": "d8b1bc0d-5558-4a0a-a5c0-62f03af12ff6",
+    "name": "ShadowPixel-Gaming-Club-main_241",
+    "filename": "1775986500173-ShadowPixel-Gaming-Club-main.zip",
+    "size": 51363222,
+    "status": "Live",
+    "url": "http://localhost:5000/sites/d8b1bc0d-5558-4a0a-a5c0-62f03af12ff6",
     "type": "ZIP",
-    "createdAt": "2026-04-12T09:18:33.248Z"
+    "createdAt": "2026-04-12T09:35:01.519Z"
   }
 ]
